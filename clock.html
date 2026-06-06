@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JavaScript Clock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #0d0d0f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Rajdhani', sans-serif;
+      color: #f0ece4;
+      overflow: hidden;
+    }
+
+    /* Background grid texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2.5rem;
+      padding: 3rem 2rem;
+      animation: fadeIn 1s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Analog Clock ── */
+    .analog-wrap {
+      position: relative;
+      width: 260px;
+      height: 260px;
+    }
+
+    .clock-face {
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: #16161a;
+      border: 1.5px solid #2e2e36;
+      position: relative;
+      box-shadow:
+        0 0 0 8px #111114,
+        0 0 0 9px #2a2a32,
+        0 0 60px rgba(0,0,0,0.8);
+    }
+
+    /* Tick marks */
+    .tick {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform-origin: 0 0;
+    }
+
+    /* Hour numbers */
+    .hour-num {
+      position: absolute;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #7c7c8a;
+      text-align: center;
+      width: 26px;
+      height: 26px;
+      line-height: 26px;
+      margin-left: -13px;
+      margin-top: -13px;
+      letter-spacing: 0;
+    }
+
+    /* Hands */
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      border-radius: 4px 4px 2px 2px;
+      transition: transform 0.05s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+    }
+
+    .hour-hand {
+      width: 6px;
+      height: 75px;
+      margin-left: -3px;
+      background: linear-gradient(to top, #c8c8d8, #888898);
+      border-radius: 3px;
+    }
+
+    .min-hand {
+      width: 4px;
+      height: 100px;
+      margin-left: -2px;
+      background: linear-gradient(to top, #d0d0e0, #6060a0);
+      border-radius: 2px;
+    }
+
+    .sec-hand {
+      width: 2px;
+      height: 108px;
+      margin-left: -1px;
+      background: #E24B4A;
+      border-radius: 1px;
+      transition: transform 0.05s linear;
+    }
+
+    /* Tail of second hand */
+    .sec-hand::before {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 22px;
+      background: #E24B4A;
+      border-radius: 1px;
+    }
+
+    .center-dot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      background: #E24B4A;
+      border: 2px solid #0d0d0f;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+
+    /* ── Digital Clock ── */
+    .digital-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .digital-time {
+      font-family: 'Space Mono', monospace;
+      font-size: 3.6rem;
+      font-weight: 700;
+      color: #f0ece4;
+      letter-spacing: 3px;
+      line-height: 1;
+    }
+
+    .digital-time .colon {
+      color: #E24B4A;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    .ampm {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #7c7c8a;
+      letter-spacing: 2px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .date-display {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #5a5a6a;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ── Separator line ── */
+    .divider {
+      width: 1px;
+      height: 40px;
+      background: #2e2e36;
+      margin: -0.5rem 0;
+    }
+
+    /* ── Timezone badge ── */
+    .tz-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: #444450;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border: 1px solid #2a2a32;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Analog Clock -->
+  <div class="analog-wrap">
+    <div class="clock-face" id="face">
+      <div class="hand hour-hand" id="hour"></div>
+      <div class="hand min-hand"  id="min"></div>
+      <div class="hand sec-hand"  id="sec"></div>
+      <div class="center-dot"></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Digital Clock -->
+  <div class="digital-section">
+    <div class="digital-time">
+      <span id="dh">12</span><span class="colon">:</span><span id="dm">00</span><span class="colon">:</span><span id="ds">00</span><span class="ampm" id="ampm">AM</span>
+    </div>
+    <div class="date-display" id="dateLabel">Loading...</div>
+    <div class="tz-badge" id="tzLabel">—</div>
+  </div>
+
+</div>
+
+<script>
+  const face = document.getElementById('face');
+
+  // Days & Months
+  const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Draw tick marks
+  for (let i = 0; i < 60; i++) {
+    const tick = document.createElement('div');
+    const isMajor = i % 5 === 0;
+    tick.style.cssText = `
+      position: absolute; top: 50%; left: 50%;
+      width: ${isMajor ? 2.5 : 1}px;
+      height: ${isMajor ? 12 : 7}px;
+      background: ${isMajor ? '#3a3a46' : '#282830'};
+      transform-origin: 0 0;
+      transform: rotate(${i * 6}deg) translate(-50%, -121px);
+    `;
+    face.appendChild(tick);
+  }
+
+  // Draw hour numbers
+  for (let i = 1; i <= 12; i++) {
+    const angle = (i / 12) * 360 - 90;
+    const r = 102;
+    const x = 130 + r * Math.cos(angle * Math.PI / 180);
+    const y = 130 + r * Math.sin(angle * Math.PI / 180);
+    const num = document.createElement('div');
+    num.className = 'hour-num';
+    num.textContent = i;
+    num.style.left = x + 'px';
+    num.style.top  = y + 'px';
+    face.appendChild(num);
+  }
+
+  // Timezone
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  document.getElementById('tzLabel').textContent = tz;
+
+  const pad = n => String(n).padStart(2, '0');
+
+  function update() {
+    const now = new Date();
+    const h   = now.getHours();
+    const m   = now.getMinutes();
+    const s   = now.getSeconds();
+    const ms  = now.getMilliseconds();
+
+    // Smooth angles
+    const sDeg = (s + ms / 1000) * 6;
+    const mDeg = m * 6 + s * 0.1;
+    const hDeg = (h % 12) * 30 + m * 0.5;
+
+    document.getElementById('sec').style.transform  = `rotate(${sDeg}deg)`;
+    document.getElementById('min').style.transform  = `rotate(${mDeg}deg)`;
+    document.getElementById('hour').style.transform = `rotate(${hDeg}deg)`;
+
+    // Digital
+    const h12 = h % 12 || 12;
+    document.getElementById('dh').textContent   = pad(h12);
+    document.getElementById('dm').textContent   = pad(m);
+    document.getElementById('ds').textContent   = pad(s);
+    document.getElementById('ampm').textContent = h < 12 ? 'AM' : 'PM';
+
+    // Date
+    document.getElementById('dateLabel').textContent =
+      `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+  }
+
+  update();
+  setInterval(update, 50);
+</script>
+
+</body>
+</html>
